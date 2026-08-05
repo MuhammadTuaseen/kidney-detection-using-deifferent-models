@@ -1,176 +1,89 @@
-# kidney-detection-using-deifferent-models
-using vgg16, mobilenet, cnn models
-Kidney Stone Detection using MobileNet, CNN, and VGG16
-This repository contains the code for detecting kidney stones in medical images using a combination of Convolutional Neural Networks (CNN), MobileNet, and VGG16 models. The models are trained on a kidney stone image dataset, and their performance is evaluated to determine the best architecture for accurate and efficient kidney stone detection.
+# Kidney CT Scan Classification and Stone Detection
 
-Project Overview
-Kidney stones are a common medical condition that requires timely detection for treatment. In this project, we explore three popular deep learning architectures to detect kidney stones in medical images:
+This project compares deep-learning approaches for analysing kidney CT images. The accompanying Jupyter notebook trains image classifiers for four kidney conditions and includes a separate YOLOv8 workflow for kidney-stone object detection.
 
-MobileNet: A lightweight and efficient model optimized for mobile devices.
-VGG16: A popular deep learning model known for its depth and accuracy, widely used in image classification tasks.
-Custom CNN: A simple CNN built from scratch to provide a baseline for comparison.
-The goal of this project is to compare the performance of these models in terms of accuracy, speed, and computational efficiency when applied to kidney stone detection.
+> **Research use only.** This project is not a clinical diagnostic tool and must not be used to make medical decisions.
 
-Features
-Compare the performance of MobileNet, VGG16, and a custom CNN model.
-Use transfer learning to fine-tune MobileNet and VGG16 on the kidney stone dataset.
-Train and evaluate models on a labeled kidney stone dataset.
-Visualize the detection results using bounding boxes and other metrics.
-Data augmentation for enhanced model generalization.
-Installation
-Requirements
-To run this project, install the required dependencies by running the following commands:
+## What is included
 
-bash
-Copy code
-pip install tensorflow keras matplotlib numpy pandas opencv-python seaborn kaggle
-Dataset
-The kidney stone detection models are trained on the Kidney Stone Image Dataset, which can be downloaded from Kaggle.
+The notebook, [`kidney_detection_using_different_models.ipynb`](./kidney_detection_using_different_models.ipynb), contains:
 
-To download the dataset, use the Kaggle API:
+- a custom convolutional neural network (CNN);
+- transfer-learning classifiers based on VGG16 and MobileNetV2;
+- four-class classification of **Cyst**, **Normal**, **Stone**, and **Tumor** CT images;
+- loss/accuracy plots and single-image prediction examples; and
+- a separate YOLOv8 training section for annotated kidney-stone images.
 
-bash
-Copy code
-!kaggle datasets download -d safurahajiheidari/kidney-stone-images
-Unzip the dataset:
+## Datasets
 
-bash
-Copy code
-import zipfile
-with zipfile.ZipFile('kidney-stone-images.zip', 'r') as zip_ref:
-    zip_ref.extractall('data/')
-Models Used
-1. MobileNet
-MobileNet is a lightweight deep learning architecture designed for resource-constrained environments. It uses depthwise separable convolutions, reducing the number of parameters without sacrificing accuracy.
+Two Kaggle datasets are used in the notebook:
 
-python
-Copy code
-from tensorflow.keras.applications import MobileNet
-from tensorflow.keras.layers import Dense, GlobalAveragePooling2D
-from tensorflow.keras.models import Model
+| Task | Dataset |
+| --- | --- |
+| CT image classification | [`nazmul0087/ct-kidney-dataset-normal-cyst-tumor-and-stone`](https://www.kaggle.com/datasets/nazmul0087/ct-kidney-dataset-normal-cyst-tumor-and-stone) |
+| YOLOv8 object detection | [`safurahajiheidari/kidney-stone-images`](https://www.kaggle.com/datasets/safurahajiheidari/kidney-stone-images) |
 
-base_model = MobileNet(weights='imagenet', include_top=False, input_shape=(224, 224, 3))
-x = base_model.output
-x = GlobalAveragePooling2D()(x)
-x = Dense(1024, activation='relu')(x)
-predictions = Dense(1, activation='sigmoid')(x)
-model = Model(inputs=base_model.input, outputs=predictions)
+Please review each dataset's licence and terms of use before downloading or redistributing it. The datasets and trained model weights are not stored in this repository.
 
-# Compile the model
-model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
-2. VGG16
-VGG16 is a deep neural network architecture with 16 layers, known for its excellent performance in image classification tasks. Although it has more parameters than MobileNet, VGG16 is well-suited for tasks where accuracy is the main priority.
+## Requirements
 
-python
-Copy code
-from tensorflow.keras.applications import VGG16
-from tensorflow.keras.layers import Dense, GlobalAveragePooling2D
-from tensorflow.keras.models import Model
+The notebook was written for Google Colab and Python 3. Install the required packages in a virtual environment or Colab runtime:
 
-vgg_base = VGG16(weights='imagenet', include_top=False, input_shape=(224, 224, 3))
-x = vgg_base.output
-x = GlobalAveragePooling2D()(x)
-x = Dense(512, activation='relu')(x)
-predictions = Dense(1, activation='sigmoid')(x)
-vgg_model = Model(inputs=vgg_base.input, outputs=predictions)
+```bash
+pip install tensorflow opencv-python matplotlib numpy pandas kaggle ultralytics squarify seaborn
+```
 
-# Compile the model
-vgg_model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
-3. Custom CNN
-A custom CNN architecture is built from scratch as a baseline. This simple model consists of several convolutional and pooling layers, followed by fully connected layers.
+For GPU training, use a TensorFlow build that is compatible with your platform and CUDA setup. A GPU-enabled Colab runtime is recommended for VGG16 and YOLOv8.
 
-python
-Copy code
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Conv2D, MaxPooling2D, Flatten, Dense
+## Run the notebook
 
-cnn_model = Sequential([
-    Conv2D(32, (3, 3), activation='relu', input_shape=(224, 224, 3)),
-    MaxPooling2D(pool_size=(2, 2)),
-    
-    Conv2D(64, (3, 3), activation='relu'),
-    MaxPooling2D(pool_size=(2, 2)),
-    
-    Conv2D(128, (3, 3), activation='relu'),
-    MaxPooling2D(pool_size=(2, 2)),
-    
-    Flatten(),
-    Dense(256, activation='relu'),
-    Dense(1, activation='sigmoid')
-])
+1. Clone this repository and open `kidney_detection_using_different_models.ipynb` in Jupyter or Google Colab.
+2. Create a Kaggle API token from your Kaggle account settings and download `kaggle.json`.
+3. In Colab, run the credential-upload cell and select `kaggle.json`. The notebook moves it to `~/.kaggle/kaggle.json` and sets the required permissions.
+4. Run the dataset download and extraction cells for the workflow you want to use.
+5. Run the model cells in order to train, plot learning curves, and make predictions.
 
-cnn_model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
-Training the Models
-Each model is trained on the kidney stone dataset using the same preprocessing and data augmentation techniques to ensure fair comparison.
+The classification workflow expects the extracted dataset at:
 
-Data Augmentation
-Data augmentation is applied to improve the generalization of the models. The training images are rescaled, rotated, shifted, and flipped.
+```text
+/content/CT-KIDNEY-DATASET-Normal-Cyst-Tumor-Stone/
+└── CT-KIDNEY-DATASET-Normal-Cyst-Tumor-Stone/
+    ├── Cyst/
+    ├── Normal/
+    ├── Stone/
+    └── Tumor/
+```
 
-python
-Copy code
-from tensorflow.keras.preprocessing.image import ImageDataGenerator
+The YOLOv8 section expects the second dataset to provide `train`, `valid`, and `test` image/label directories, plus a `data.yaml` file. Update the paths in the notebook if your extraction layout differs.
 
-train_datagen = ImageDataGenerator(
-    rescale=1./255,
-    rotation_range=30,
-    width_shift_range=0.2,
-    height_shift_range=0.2,
-    zoom_range=0.2,
-    horizontal_flip=True,
-    fill_mode='nearest'
-)
+## Models
 
-train_generator = train_datagen.flow_from_directory(
-    'data/train',
-    target_size=(224, 224),
-    batch_size=32,
-    class_mode='binary'
-)
-Training Example
-Each model is trained for a specified number of epochs on the kidney stone image dataset. Here’s an example of training MobileNet:
+### Classification
 
-python
-Copy code
-history = model.fit(
-    train_generator,
-    epochs=20,
-    validation_data=validation_generator
-)
-Evaluation
-After training, the models are evaluated on the test set to compare their performance.
+All three classifiers use 150 × 150 RGB input images, normalized to the `[0, 1]` range. They are trained with sparse categorical cross-entropy over four output classes.
 
-python
-Copy code
-test_loss, test_acc = model.evaluate(test_generator)
-print(f"Test Accuracy: {test_acc}")
-Results
-The performance of each model is evaluated based on:
+- **Custom CNN:** two convolution/max-pooling blocks followed by a dense classifier.
+- **VGG16:** ImageNet-pretrained VGG16 feature extractor (frozen), followed by a dense classification head with batch normalization and dropout.
+- **MobileNetV2:** ImageNet-pretrained MobileNetV2 feature extractor (frozen), followed by the same classification head pattern.
 
-Accuracy: Percentage of correct predictions.
-Loss: Binary cross-entropy loss.
-Inference Time: Time taken for model prediction per image.
-Model Comparison
-Model	Accuracy	Loss	Inference Time
-MobileNet	92%	0.20	Fast
-VGG16	94%	0.15	Slower
-Custom CNN	88%	0.25	Fast
-Visualizing Results
-After detection, the results can be visualized using bounding boxes around the detected kidney stones. Here's an example of displaying a predicted image:
+### Object detection
 
-python
-Copy code
-import matplotlib.pyplot as plt
-import cv2
+The notebook initializes `yolov8x.pt` pretrained weights and trains with Ultralytics YOLO using `data.yaml`, a learning rate of `0.001`, seed `42`, and `50` epochs. This is a distinct detection task; its results should not be directly compared with the four-class classification metrics.
 
-img = cv2.imread('data/test_image.jpg')
-plt.imshow(img)
-plt.show()
+## Notes and limitations
 
-# Making predictions
-predictions = model.predict(img)
-Conclusion
-MobileNet: Provides a good balance of speed and accuracy, making it suitable for mobile and edge deployments.
-VGG16: Achieves the highest accuracy but requires more computational power.
-Custom CNN: Fast inference, but lower accuracy compared to MobileNet and VGG16.
-License
-This project is licensed under the MIT License.
+- The notebook currently uses different `validation_split` values for the training (`0.1`) and validation (`0.2`) datasets. For a reliable experiment, create one fixed train/validation split or use a predefined validation directory before reporting results.
+- Training duration, accuracy, and detection quality depend on the dataset version, split, runtime, and random seed. No fixed benchmark results are claimed here.
+- The notebook contains Colab-specific paths and shell commands. Adapt `/content/...` paths and the Kaggle credential setup when running locally.
+
+## Repository structure
+
+```text
+.
+├── kidney_detection_using_different_models.ipynb  # Training and evaluation workflows
+└── README.md
+```
+
+## Licence
+
+No licence file is currently included. Contact the repository owner before reusing the project code beyond what applicable law permits.
